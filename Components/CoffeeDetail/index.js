@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
+import { addItemToCart, removeItemFromCart } from "../../store/actions/cartActions"
+
 
 // NativeBase Components
 import {
@@ -31,7 +33,8 @@ class CoffeeDetail extends Component {
   };
   state = {
     drink: "Cappuccino",
-    option: "Small"
+    option: "Small",
+    addedClicked: 0,
   };
 
   changeDrink = value => {
@@ -45,6 +48,79 @@ class CoffeeDetail extends Component {
       option: value
     });
   };
+
+  alert = () => {
+    let newValue = this.state.addedClicked + 1;
+    this.setState({
+      addedClicked: newValue,
+    });
+  };
+
+
+
+  handleAdd = () => {
+    let myItem = {
+      drink: this.state.drink,
+      option: this.state.option,
+      quantity: 1,
+    }
+
+    //if the item exists in the items array, increase the quantity of the item
+
+    //search for item 
+    // let theChoosenItemExists = this.props.items.find(item => {
+    //   return (item.drink === myItem.drink
+    //     && item.option === myItem.option)
+    // })
+    console.log("this.props.items", this.props.items)
+
+    let theChoosenItemExists = this.props.items.filter(item =>
+      (item.drink === myItem.drink
+        && item.option === myItem.option))
+
+
+    console.log("theChoosenItemExists", theChoosenItemExists)
+
+    // the choosenitem exists 
+    if (theChoosenItemExists.length !== 0) // increase the quentity 
+    {
+      //get the current quentity
+      const oldQuentity = theChoosenItemExists[0].quantity;
+      console.log("theChoosenItemExists[0]", theChoosenItemExists[0])
+      console.log("theChoosenItemExists[0].drink", theChoosenItemExists[0].drink)
+
+      console.log("oldQuentity", oldQuentity)
+
+      const newQuentity = oldQuentity + 1;
+
+      console.log("theChoosenItemExists", theChoosenItemExists)
+      const itemToRemove = {
+        drink: myItem.drink,
+        option: myItem.option,
+        quantity: oldQuentity,
+      }
+
+      this.props.removeItemFromCart(itemToRemove);
+
+
+      const itemToAdd = {
+        drink: myItem.drink,
+        option: myItem.option,
+        quantity: newQuentity,
+      }
+      this.props.addItemToCart(itemToAdd);
+
+
+
+    }
+    //else add this item directly
+    else {
+      this.props.addItemToCart(myItem);
+
+    }
+
+  };
+
 
   render() {
     const { coffeeShops, loading } = this.props.coffeeReducer;
@@ -93,7 +169,8 @@ class CoffeeDetail extends Component {
               </Picker>
             </Body>
           </ListItem>
-          <Button full danger>
+
+          <Button full danger onPress={this.handleAdd}>
             <Text>Add</Text>
           </Button>
         </List>
@@ -103,7 +180,16 @@ class CoffeeDetail extends Component {
 }
 
 const mapStateToProps = state => ({
-  coffeeReducer: state.coffeeReducer
+  coffeeReducer: state.coffeeReducer,
+  items: state.cartReducer.items,
 });
 
-export default connect(mapStateToProps)(CoffeeDetail);
+
+const mapDispatchToProps = dispatch => {
+  return {
+    addItemToCart: item => dispatch(addItemToCart(item)),
+    removeItemFromCart: item => dispatch(removeItemFromCart(item)),
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(CoffeeDetail);
